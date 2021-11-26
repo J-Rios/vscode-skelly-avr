@@ -23,6 +23,12 @@ sudo apt-get -y install cflow
 sudo apt-get -y install avrdude
 ```
 
+- Give execute permissions to tools scripts:
+
+```bash
+chmod +x vscode-skelly-avr/tools/*
+```
+
 ## How to Create a AVR project supported by vscode
 
 Here is the steps that has been followed to create current project:
@@ -56,9 +62,3 @@ Build:
 3. Run **make build DEVICE=X F_CPU=X** to launch the Build.
 
 4. Run **make flash PROGRAMMER=X** to build and flash the firmware into target device.
-
-Release Flash:
-
-1. Press Ctrl+Shift+B to show the configured Tasks of the project.
-
-2. Execute one of the Task to flash the firmware into the device through any of the supported and configured interfaces (*edbg*).
