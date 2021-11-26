@@ -103,6 +103,9 @@ build: $(PRJ).bin
 	cp -a $(PRJ).hex $(RELEASEDIR)
 	cp -a $(PRJ).bin $(RELEASEDIR)
 	$(SIZE) $(PRJ).elf
+	@../tools/memusage $(BUILDDIR)/fw_memory_used.tmp >/dev/null 2>&1
+	@rm -f $(BUILDDIR)/*.su
+	mv $(BUILDDIR)/fw_memory_used.tmp $(BUILDDIR)/fw_memory_used.su
 
 # Target: make clean (remove all previously builds)
 clean:

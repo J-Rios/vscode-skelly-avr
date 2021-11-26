@@ -8,5 +8,6 @@
 **/*.map
 **/*.sym
 **/*.su
+**/*.tmp
 **/*.optimized
 **/*.pdf
