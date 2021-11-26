@@ -25,16 +25,16 @@ static const uint16_t DELAY_MS_LED_TOGGLE = 500;
 int main(void)
 {
     // Set LED Pin as digital Output
-    DDRB |= PIN_LED;
+    DDRB |= (1 << PIN_LED);
 
     while (1)
     {
         // LED ON
-        PORTB |= PIN_LED;
+        PORTB |= (1 << PIN_LED);
         _delay_ms(DELAY_MS_LED_TOGGLE);
 
         // LED OFF
-        PORTB &= ~PIN_LED;
+        PORTB &= ~(1 << PIN_LED);
         _delay_ms(DELAY_MS_LED_TOGGLE);
     }
 }

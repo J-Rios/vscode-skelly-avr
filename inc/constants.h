@@ -43,7 +43,7 @@
 #define FW_APP_VERSION "1.0.0"
 
 // LED Pin (Port B Pin 5)
-#define PIN_LED PINB5
+#define PIN_LED PB5
 
 // ...
 
