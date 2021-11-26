@@ -51,7 +51,7 @@ Build:
 
 1. Physically connect the hardware programmer to target device and the PC.
 
-2. Using a shell, go to **build/** directory and run **make help** to see build instructions.
+2. Using a shell, go to **build/** directory and run **make** to see build instructions.
 
 3. Run **make build DEVICE=X F_CPU=X** to launch the Build.
 

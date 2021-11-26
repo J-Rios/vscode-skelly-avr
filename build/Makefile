@@ -111,6 +111,8 @@ clean:
 	rm -f $(BUILDDIR)/$(PRJ).elf
 	rm -f $(BUILDDIR)/$(PRJ).hex
 	rm -f $(BUILDDIR)/$(PRJ).bin
+	rm -f $(BUILDDIR)/dump.bin
+	rm -f $(BUILDDIR)/dump.hex
 
 # Target: make rebuild (clean previously builds and build again)
 rebuild: clean all
@@ -126,6 +128,7 @@ fuse:
 # Read flash memory from MCU
 dump:
 	$(AVRDUDE) -U flash:r:dump.bin:r
+	$(OBJCOPY) -I binary -O ihex dump.bin dump.hex
 
 # Target: check (custom target to check build variables)
 check:
