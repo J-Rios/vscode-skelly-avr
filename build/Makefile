@@ -62,7 +62,9 @@ HEADS += $(shell find $(WORKSPACE)/lib -type f -name *.h)
 HEADS += $(shell find $(WORKSPACE)/lib -type f -name *.hpp)
 
 # Get objects files from sources and output object
-OBJS = $(_OBJS:.c=.o) $(SRCS:.cpp=.o)
+_OBJS = $(SRCS:.c=.o)
+OBJS = $(_OBJS:.cpp=.o)
+BUILDOBJS = $(BUILDDIR)/$(shell basename $(OBJS))
 
 ###############################################################################
 
@@ -98,7 +100,7 @@ check:
 	@echo "SRCS:"
 	@echo "  $(SRCS)"
 	@echo "OBJS:"
-	@echo "  $(OBJS)"
+	@echo "  $(BUILDOBJS)"
 	@echo "BINDIR:"
 	@echo "  $(BINDIR)"
 
@@ -112,7 +114,7 @@ $(PRJ).hex: $(PRJ).elf
 
 # Target for generate ELF file linking all .o files
 $(PRJ).elf: $(OBJS)
-	$(CC) $(CFLAGS) -o $(PRJ).elf $(OBJS)
+	$(CC) $(CFLAGS) -o $(PRJ).elf $(BUILDOBJS)
 
 # Target for generate object file of each .c file
 %.o: %.c
@@ -120,4 +122,4 @@ $(PRJ).elf: $(OBJS)
 
 # Target for generate object file of each .cpp file
 %.o: %.cpp
-	$(CC) $(CPPFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c $<
