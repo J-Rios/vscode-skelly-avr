@@ -118,7 +118,7 @@ clean:
 rebuild: clean all
 
 # Flash program to MCU
-flash:
+flash: build
 	$(AVRDUDE) -U flash:w:$(PRJ).hex:i
 
 # Write fuses to MCU
@@ -127,6 +127,8 @@ fuse:
 
 # Read flash memory from MCU
 dump:
+	rm -f $(BUILDDIR)/dump.bin
+	rm -f $(BUILDDIR)/dump.hex
 	$(AVRDUDE) -U flash:r:dump.bin:r
 	$(OBJCOPY) -I binary -O ihex dump.bin dump.hex
 
