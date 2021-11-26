@@ -6,18 +6,30 @@ PRJ = fw_app
 WORKSPACE = ..
 
 # Specify target Microcontroller
-DEVICE = atmega328p
+ifndef $(DEVICE)
+	DEVICE = none
+endif
 
 # Specify MCU CPU Frequency
-F_CPU = 16000000
+ifndef $(F_CPU)
+	F_CPU = 16000000
+endif
 
 # Low, High and Extended Fuses Values
-LFU = 0xFF
-HFU = 0xDE
-EFU = 0x05
+ifndef $(LFU)
+	LFU = "none"
+endif
+ifndef $(LFU)
+	HFU = "none"
+endif
+ifndef $(LFU)
+	EFU = "none"
+endif
 
 # Avrdude Programmer
-PROGRAMMER = usbasp
+ifndef $(PROGRAMMER)
+	PROGRAMMER = usbasp
+endif
 
 # Specify default compilers and tools
 CC      = avr-gcc
@@ -68,12 +80,29 @@ BUILDOBJS = $(BUILDDIR)/$(shell basename $(OBJS))
 
 ###############################################################################
 
+ifdef $(TEST)
+	CFLAGS += -DTEST
+	CXXFLAGS += -DTEST
+endif
+
+ifdef $(BOOTLOADER)
+	CFLAGS += -DBOOTLOADER
+	CXXFLAGS += -DTEST
+endif
+
+###############################################################################
+
+help:
+	@cat README.md
+
 # Target: make all (build project generating output directory)
-all: $(PRJ).hex
+build: $(PRJ).bin
 	rm -f ${RELEASEDIR}/*
 	mkdir -p ${RELEASEDIR}
-	mv $(PRJ).elf $(RELEASEDIR)
-	mv $(PRJ).hex $(RELEASEDIR)
+	cp -a $(PRJ).elf $(RELEASEDIR)
+	cp -a $(PRJ).hex $(RELEASEDIR)
+	cp -a $(PRJ).bin $(RELEASEDIR)
+	$(SIZE) $(PRJ).elf
 
 # Target: make clean (remove all previously builds)
 clean:
@@ -81,17 +110,22 @@ clean:
 	rm -f $(BUILDDIR)/*.su
 	rm -f $(BUILDDIR)/$(PRJ).elf
 	rm -f $(BUILDDIR)/$(PRJ).hex
+	rm -f $(BUILDDIR)/$(PRJ).bin
 
 # Target: make rebuild (clean previously builds and build again)
 rebuild: clean all
 
 # Flash program to MCU
-flash: all
+flash:
 	$(AVRDUDE) -U flash:w:$(PRJ).hex:i
 
 # Write fuses to MCU
 fuse:
 	$(AVRDUDE) -U lfuse:w:$(LFU):m -U hfuse:w:$(HFU):m -U efuse:w:$(EFU):m
+
+# Read flash memory from MCU
+dump:
+	$(AVRDUDE) -U flash:r:dump.bin:r
 
 # Target: check (custom target to check build variables)
 check:
@@ -106,11 +140,15 @@ check:
 
 ###############################################################################
 
+# Target for generate BIN file from .elf file
+$(PRJ).bin: $(PRJ).hex
+	rm -f $(PRJ).bin
+	$(OBJCOPY) -j .text -j .data -O binary $(PRJ).elf $(PRJ).bin
+
 # Target for generate HEX file from .elf file
 $(PRJ).hex: $(PRJ).elf
 	rm -f $(PRJ).hex
 	$(OBJCOPY) -j .text -j .data -O ihex $(PRJ).elf $(PRJ).hex
-	$(SIZE) $(PRJ).elf
 
 # Target for generate ELF file linking all .o files
 $(PRJ).elf: $(OBJS)
