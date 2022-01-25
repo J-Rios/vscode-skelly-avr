@@ -1,9 +1,13 @@
 
 # Specify project name and default compilers
-PRJ = fw_app
+PRJ = application
 
 # Project root WorkSpace
 WORKSPACE = ..
+
+# Build and Binary Release directories
+BUILDDIR = $(WORKSPACE)/build
+BINDIR = $(WORKSPACE)/bin
 
 # Specify target Microcontroller
 ifndef $(DEVICE)
@@ -12,7 +16,7 @@ endif
 
 # Specify MCU CPU Frequency
 ifndef $(F_CPU)
-	F_CPU = 16000000
+	F_CPU = 16000000L
 endif
 
 # Low, High and Extended Fuses Values
@@ -31,30 +35,7 @@ ifndef $(PROGRAMMER)
 	PROGRAMMER = usbasp
 endif
 
-# Specify default compilers and tools
-CC      = avr-gcc
-CXX     = avr-g++
-AVRDUDE = avrdude -c $(PROGRAMMER) -p $(DEVICE)
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-SIZE    = avr-size --format=avr --mcu=$(DEVICE)
-
-#Setup libs directories to be included
-LIBS = -I$(WORKSPACE)/inc
-LIBS += -L$(WORKSPACE)/lib
-
-# Setup compilation flags
-CFLAGS = -Os -Wall -fstack-usage -mmcu=$(DEVICE) -DF_CPU=$(F_CPU) -g $(LIBS)
-CXXFLAGS = -Os -Wall -fstack-usage -mmcu=$(DEVICE) -DF_CPU=$(F_CPU) -g $(LIBS)
-
-# Compile instruction
-COMPILE = $(CXX) $(CXXFLAGS)
-
 ###############################################################################
-
-# Specify Build and Binary Release directories
-BUILDDIR = $(WORKSPACE)/build
-BINDIR = $(WORKSPACE)/bin
 
 # Get actual date and setup output binary directory name
 #DATE = $(shell date '+%Y_%m_%d_%H_%M_%S')
@@ -70,25 +51,61 @@ SRCS  += $(shell find $(WORKSPACE)/lib -type f -name *.cpp)
 # Specify Headers files (Automatic search in specific directories)
 HEADS = $(shell find $(WORKSPACE)/inc -type f -name *.h)
 HEADS += $(shell find $(WORKSPACE)/inc -type f -name *.hpp)
+HEADS += $(shell find $(WORKSPACE)/src -type f -name *.h)
+HEADS += $(shell find $(WORKSPACE)/src -type f -name *.hpp)
 HEADS += $(shell find $(WORKSPACE)/lib -type f -name *.h)
 HEADS += $(shell find $(WORKSPACE)/lib -type f -name *.hpp)
+
+# Get Headers directories from headers paths
+HEADERSDIR = $(shell echo $(HEADS) | xargs -n1 dirname | sort -u | xargs -n1 -i echo "-I{}")
+HEADERSDIR += $(shell echo $(HEADS) | xargs -n1 dirname | sort -u | xargs -n1 -i echo "-L{}")
 
 # Get objects files from sources and output object
 _OBJS = $(SRCS:.c=.o)
 OBJS = $(_OBJS:.cpp=.o)
-BUILDOBJS = $(BUILDDIR)/$(shell basename $(OBJS))
+BUILDOBJS = $(shell echo $(OBJS) | xargs -n1 basename | xargs -n1 -i echo "$(BUILDDIR)/{}")
 
 ###############################################################################
 
-ifdef $(TEST)
+# Specify default compilers and tools
+CC      = avr-gcc
+CXX     = avr-g++
+AVRDUDE = avrdude -c $(PROGRAMMER) -p $(DEVICE)
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SIZE    = avr-size --format=avr --mcu=$(DEVICE)
+
+# Setup compilation flags
+CFLAGS = -Os -Wall -g -fstack-usage -flto
+CFLAGS += '-mmcu=$(DEVICE)'
+CFLAGS += '-DF_CPU=$(F_CPU)'
+ifeq ($(TEST), 1)
 	CFLAGS += -DTEST
-	CXXFLAGS += -DTEST
+endif
+CFLAGS += $(HEADERSDIR)
+CXXFLAGS = $(CFLAGS)
+
+# Flash Section to place the binary
+# Application placed at "Flash_Start" (0x0000)
+# Bootloader placed at "Flash_End" - "Boot_Section_Size"
+#   Boot Section size must be defined with BOOTSZ0 and BOOTSZ1 fuses
+#   Example:
+#     Device of 128KB Flash with 4KB Boot Section: (128-4)*1024 = 0x1F000
+ifeq ($(BOOTLOADER), 1)
+	PRJ = bootloader
+	FLASHSECTION = --section-start=.text=0x1F000
+else
+	PRJ = application
+	FLASHSECTION = --section-start=.text=0x00000
+	BOOTLOADER=0
 endif
 
-ifdef $(BOOTLOADER)
-	CFLAGS += -DBOOTLOADER
-	CXXFLAGS += -DTEST
-endif
+# Linker flags
+LDFLAGS = '-Wl,$(FLASHSECTION)'
+
+# Compile instruction
+COMPILE_C = $(CC) $(CFLAGS) $(LDFLAGS)
+COMPILE_CXX = $(CXX) $(CXXFLAGS) $(LDFLAGS)
 
 ###############################################################################
 
@@ -102,10 +119,17 @@ build: $(PRJ).bin
 	cp -a $(PRJ).elf $(RELEASEDIR)
 	cp -a $(PRJ).hex $(RELEASEDIR)
 	cp -a $(PRJ).bin $(RELEASEDIR)
-	$(SIZE) $(PRJ).elf
 	@../tools/memusage $(BUILDDIR)/fw_memory_used.tmp >/dev/null 2>&1
 	@rm -f $(BUILDDIR)/*.su
 	mv $(BUILDDIR)/fw_memory_used.tmp $(BUILDDIR)/fw_memory_used.su
+	$(SIZE) $(PRJ).elf
+	@if [ ${BOOTLOADER} = "1" ]; then\
+        echo "Bootloader Built";\
+	else\
+		echo "Application Built";\
+	fi
+	@../tools/binary_size $(PRJ).bin
+	@echo ""
 
 # Target: make clean (remove all previously builds)
 clean:
@@ -118,7 +142,7 @@ clean:
 	rm -f $(BUILDDIR)/dump.hex
 
 # Target: make rebuild (clean previously builds and build again)
-rebuild: clean all
+rebuild: clean build
 
 # Flash program to MCU
 flash: build
@@ -141,6 +165,10 @@ check:
 	@echo "  $(HEADS)"
 	@echo "SRCS:"
 	@echo "  $(SRCS)"
+	@echo "BUILD FLAGS:"
+	@echo "  $(CFLAGS)"
+	@echo "LINK FLAGS:"
+	@echo "  $(LDFLAGS)"
 	@echo "OBJS:"
 	@echo "  $(BUILDOBJS)"
 	@echo "BINDIR:"
@@ -160,12 +188,12 @@ $(PRJ).hex: $(PRJ).elf
 
 # Target for generate ELF file linking all .o files
 $(PRJ).elf: $(OBJS)
-	$(CC) $(CFLAGS) -o $(PRJ).elf $(BUILDOBJS)
+	$(COMPILE_C) -o $(PRJ).elf $(BUILDOBJS)
 
 # Target for generate object file of each .c file
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(COMPILE_C) -c $<
 
 # Target for generate object file of each .cpp file
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $<
+	$(COMPILE_CXX) -c $<
