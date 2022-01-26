@@ -16,7 +16,7 @@ endif
 
 # Specify MCU CPU Frequency
 ifndef $(F_CPU)
-	F_CPU = 16000000L
+	F_CPU = 16000000UL
 endif
 
 # Low, High and Extended Fuses Values
@@ -71,6 +71,7 @@ BUILDOBJS = $(shell echo $(OBJS) | xargs -n1 basename | xargs -n1 -i echo "$(BUI
 CC      = avr-gcc
 CXX     = avr-g++
 AVRDUDE = avrdude -c $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE_ARDUINO = avrdude -c arduino -b 115200 -P /dev/ttyUSB0 -p $(DEVICE)
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SIZE    = avr-size --format=avr --mcu=$(DEVICE)
@@ -147,6 +148,10 @@ rebuild: clean build
 # Flash program to MCU
 flash: build
 	$(AVRDUDE) -U flash:w:$(PRJ).hex:i
+
+# Flash program to MCU
+flash_arduino: build
+	$(AVRDUDE_ARDUINO) -U flash:w:$(PRJ).hex:i
 
 # Write fuses to MCU
 fuse:
