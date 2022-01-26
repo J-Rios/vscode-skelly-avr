@@ -1,6 +1,6 @@
 
 # Specify project name and default compilers
-PRJ = application
+PROJECTNAME = avrproject
 
 # Project root WorkSpace
 WORKSPACE = ..
@@ -93,10 +93,10 @@ CXXFLAGS = $(CFLAGS)
 #   Example:
 #     Device of 128KB Flash with 4KB Boot Section: (128-4)*1024 = 0x1F000
 ifeq ($(BOOTLOADER), 1)
-	PRJ = bootloader
+	PRJ = 'fw-boot-$(PROJECTNAME)'
 	FLASHSECTION = --section-start=.text=0x1F000
 else
-	PRJ = application
+	PRJ = 'fw-app-$(PROJECTNAME)'
 	FLASHSECTION = --section-start=.text=0x00000
 	BOOTLOADER=0
 endif
