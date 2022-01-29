@@ -1,5 +1,5 @@
 
-# Specify project name and default compilers
+# Specify project name
 PROJECTNAME = avrproject
 
 # Project root WorkSpace
