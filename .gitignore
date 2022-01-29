@@ -1,4 +1,7 @@
 
+build/memory_program.txt
+build/memory_ram.txt
+
 **/*.elf
 **/*.bin
 **/*.hex

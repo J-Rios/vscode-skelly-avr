@@ -14,7 +14,7 @@ fi
 
 # Get CFlow and memory usage
 FLOW=`cflow $1`
-SU=`cat ${DIR}/../build/fw_memory_used.su`
+SU=`cat ${DIR}/../build/memory_ram.txt`
 
 # Show usage for each cflow line (ignore duplicates)
 while IFS= read -r line

@@ -5,10 +5,10 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # Check if argument was provided
 if [ $# -lt 1 ]; then
-    echo "  This script generate a full static memory usage file."
+    echo "  This script generate a full static RAM memory usage file."
     echo "    You need to provide the output file to generate."
     echo "    Example:"
-    echo "      ${0} fw_memory_used.txt"
+    echo "      ${0} memory_used_ram.txt"
     echo ""
     exit 1
 fi

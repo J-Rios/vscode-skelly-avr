@@ -74,10 +74,11 @@ AVRDUDE = avrdude -c $(PROGRAMMER) -p $(DEVICE)
 AVRDUDE_ARDUINO = avrdude -c arduino -b 115200 -P /dev/ttyUSB0 -p $(DEVICE)
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
+NM      = avr-nm --line-numbers --print-size --size-sort --radix=d
 SIZE    = avr-size --format=avr --mcu=$(DEVICE)
 
 # Setup compilation flags
-CFLAGS = -Os -Wall -g -fstack-usage -flto
+CFLAGS = -Os -flto -Wall -g -fdebug-prefix-map=/= -fstack-usage
 CFLAGS += '-mmcu=$(DEVICE)'
 CFLAGS += '-DF_CPU=$(F_CPU)'
 ifeq ($(TEST), 1)
@@ -120,9 +121,10 @@ build: $(PRJ).bin
 	cp -a $(PRJ).elf $(RELEASEDIR)
 	cp -a $(PRJ).hex $(RELEASEDIR)
 	cp -a $(PRJ).bin $(RELEASEDIR)
-	@../tools/memusage $(BUILDDIR)/fw_memory_used.tmp >/dev/null 2>&1
+	@echo "ADDRESS    SIZE    FUNCTION    FILE:LINE\n" > memory_program.txt
+	@$(NM) $(PRJ).elf >> memory_program.txt
+	@../tools/memusageram $(BUILDDIR)/memory_ram.txt >/dev/null 2>&1
 	@rm -f $(BUILDDIR)/*.su
-	mv $(BUILDDIR)/fw_memory_used.tmp $(BUILDDIR)/fw_memory_used.su
 	$(SIZE) $(PRJ).elf
 	@if [ ${BOOTLOADER} = "1" ]; then\
         echo "Bootloader Built";\
@@ -141,6 +143,8 @@ clean:
 	rm -f $(BUILDDIR)/$(PRJ).bin
 	rm -f $(BUILDDIR)/dump.bin
 	rm -f $(BUILDDIR)/dump.hex
+	rm -f $(BUILDDIR)/memory_program.txt
+	rm -f $(BUILDDIR)/memory_ram.txt
 
 # Target: make rebuild (clean previously builds and build again)
 rebuild: clean build
