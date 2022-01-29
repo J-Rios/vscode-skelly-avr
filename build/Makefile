@@ -125,6 +125,8 @@ build: $(PRJ).bin
 	@$(NM) $(PRJ).elf >> memory_program.txt
 	@../tools/memusageram $(BUILDDIR)/memory_ram.txt >/dev/null 2>&1
 	@rm -f $(BUILDDIR)/*.su
+	@mkdir -p $(BUILDDIR)/obj
+	@mv $(BUILDDIR)/*.o $(BUILDDIR)/obj/
 	$(SIZE) $(PRJ).elf
 	@if [ ${BOOTLOADER} = "1" ]; then\
         echo "Bootloader Built";\
