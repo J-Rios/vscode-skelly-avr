@@ -93,10 +93,10 @@ CXXFLAGS = $(CFLAGS)
 #   Example:
 #     Device of 128KB Flash with 4KB Boot Section: (128-4)*1024 = 0x1F000
 ifeq ($(BOOTLOADER), 1)
-	PRJ = 'fw-boot-$(PROJECTNAME)'
+	PRJ = 'fw_boot_$(PROJECTNAME)'
 	FLASHSECTION = --section-start=.text=0x1F000
 else
-	PRJ = 'fw-app-$(PROJECTNAME)'
+	PRJ = 'fw_app_$(PROJECTNAME)'
 	FLASHSECTION = --section-start=.text=0x00000
 	BOOTLOADER=0
 endif
