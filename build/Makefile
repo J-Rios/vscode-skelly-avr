@@ -79,6 +79,7 @@ SIZE    = avr-size --format=avr --mcu=$(DEVICE)
 
 # Setup compilation flags
 CFLAGS = -Os -flto -Wall -g -fdebug-prefix-map=/= -fstack-usage
+#CFLAGS += -Wl,-u,vfprintf -lprintf_flt -lm # Uncomment to use snprintf
 CFLAGS += '-mmcu=$(DEVICE)'
 CFLAGS += '-DF_CPU=$(F_CPU)'
 ifeq ($(TEST), 1)
@@ -138,7 +139,7 @@ build: $(PRJ).bin
 
 # Target: make clean (remove all previously builds)
 clean:
-	rm -f $(BUILDDIR)/*.o
+	rm -rf $(BUILDDIR)/obj
 	rm -f $(BUILDDIR)/*.su
 	rm -f $(BUILDDIR)/$(PRJ).elf
 	rm -f $(BUILDDIR)/$(PRJ).hex
